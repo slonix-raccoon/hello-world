@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hello World</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-weather {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(14,165,233,0.4);
+    }
+    .btn-weather:hover { box-shadow: 0 6px 20px rgba(14,165,233,0.6); }
+
+    .btn-datetime {
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(139,92,246,0.4);
+    }
+    .btn-datetime:hover { box-shadow: 0 6px 20px rgba(139,92,246,0.6); }
+
+    .btn-version {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.4);
+    }
+    .btn-version:hover { box-shadow: 0 6px 20px rgba(16,185,129,0.6); }
+
+    /* Overlay */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.active { display: flex; }
+
+    /* Modal */
+    .modal {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      padding: 2rem;
+      min-width: 320px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+      position: relative;
+      animation: pop-in 0.2s ease;
+    }
+
+    @keyframes pop-in {
+      from { transform: scale(0.9); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .modal-icon {
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #334155;
+      border: none;
+      color: #94a3b8;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+      padding: 0;
+      box-shadow: none;
+    }
+    .modal-close:hover { background: #475569; color: #f1f5f9; }
+
+    .modal-body { color: #cbd5e1; }
+
+    /* Weather grid */
+    .weather-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .weather-card {
+      background: #0f172a;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+    }
+
+    .weather-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+    }
+
+    .weather-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .weather-location {
+      font-size: 0.95rem;
+      color: #38bdf8;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .weather-desc {
+      font-size: 1rem;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+    }
+
+    /* DateTime */
+    .datetime-display {
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .datetime-date {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #c4b5fd;
+      margin-bottom: 0.5rem;
+    }
+
+    .datetime-time {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.05em;
+    }
+
+    .datetime-tz {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    /* Version */
+    .version-display {
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .version-badge {
+      display: inline-block;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #6ee7b7;
+      background: #064e3b;
+      border: 1px solid #065f46;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .version-label {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 0.75rem;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid #334155;
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 1.5rem auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      color: #f87171;
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hello, World!</h1>
+
+  <div class="buttons">
+    <button class="btn-weather" onclick="showWeather()">🌤 Current Weather</button>
+    <button class="btn-datetime" onclick="showDateTime()">🕐 Date &amp; Time</button>
+    <button class="btn-version" onclick="showVersion()">📦 App Version</button>
+  </div>
+
+  <!-- Weather Modal -->
+  <div class="overlay" id="weatherOverlay" onclick="closeModal('weatherOverlay')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('weatherOverlay')">✕</button>
+      <div class="modal-header">
+        <span class="modal-icon">🌤</span>
+        <span class="modal-title">Current Weather</span>
+      </div>
+      <div class="modal-body" id="weatherBody">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DateTime Modal -->
+  <div class="overlay" id="datetimeOverlay" onclick="closeModal('datetimeOverlay')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('datetimeOverlay')">✕</button>
+      <div class="modal-header">
+        <span class="modal-icon">🕐</span>
+        <span class="modal-title">Date &amp; Time</span>
+      </div>
+      <div class="modal-body" id="datetimeBody"></div>
+    </div>
+  </div>
+
+  <!-- Version Modal -->
+  <div class="overlay" id="versionOverlay" onclick="closeModal('versionOverlay')">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('versionOverlay')">✕</button>
+      <div class="modal-header">
+        <span class="modal-icon">📦</span>
+        <span class="modal-title">Application Version</span>
+      </div>
+      <div class="modal-body" id="versionBody"></div>
+    </div>
+  </div>
+
+  <script>
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.overlay.active').forEach(el => el.classList.remove('active'));
+      }
+    });
+
+    async function showWeather() {
+      const overlay = document.getElementById('weatherOverlay');
+      const body = document.getElementById('weatherBody');
+      body.innerHTML = '<div class="spinner"></div>';
+      overlay.classList.add('active');
+
+      try {
+        const res = await fetch('/api/weather');
+        if (!res.ok) throw new Error();
+        const w = await res.json();
+        if (w.error) throw new Error(w.error);
+
+        body.innerHTML = `
+          <p class="weather-location">📍 ${w.location}</p>
+          <p class="weather-desc">${w.description}</p>
+          <div class="weather-grid">
+            <div class="weather-card">
+              <div class="weather-label">Temperature</div>
+              <div class="weather-value">${w.temp_c}°C / ${w.temp_f}°F</div>
+            </div>
+            <div class="weather-card">
+              <div class="weather-label">Feels Like</div>
+              <div class="weather-value">${w.feels_like_c}°C / ${w.feels_like_f}°F</div>
+            </div>
+            <div class="weather-card">
+              <div class="weather-label">Humidity</div>
+              <div class="weather-value">${w.humidity}%</div>
+            </div>
+            <div class="weather-card">
+              <div class="weather-label">Wind</div>
+              <div class="weather-value">${w.wind_kmph} km/h</div>
+            </div>
+          </div>
+        `;
+      } catch {
+        body.innerHTML = '<p class="error-msg">⚠️ Could not load weather data.<br>Please check your internet connection.</p>';
+      }
+    }
+
+    let clockInterval = null;
+
+    function showDateTime() {
+      const overlay = document.getElementById('datetimeOverlay');
+      const body = document.getElementById('datetimeBody');
+
+      function update() {
+        const now = new Date();
+        const date = now.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const time = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        body.innerHTML = `
+          <div class="datetime-display">
+            <div class="datetime-date">${date}</div>
+            <div class="datetime-time">${time}</div>
+            <div class="datetime-tz">${tz}</div>
+          </div>
+        `;
+      }
+
+      update();
+      overlay.classList.add('active');
+      clearInterval(clockInterval);
+      clockInterval = setInterval(() => {
+        if (!overlay.classList.contains('active')) {
+          clearInterval(clockInterval);
+        } else {
+          update();
+        }
+      }, 1000);
+    }
+
+    async function showVersion() {
+      const overlay = document.getElementById('versionOverlay');
+      const body = document.getElementById('versionBody');
+      body.innerHTML = '<div class="spinner"></div>';
+      overlay.classList.add('active');
+
+      try {
+        const res = await fetch('/api/version');
+        const data = await res.json();
+        body.innerHTML = `
+          <div class="version-display">
+            <div class="version-badge">v${data.version}</div>
+            <div class="version-label">hello-world application</div>
+          </div>
+        `;
+      } catch {
+        body.innerHTML = '<p class="error-msg">⚠️ Could not load version info.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
